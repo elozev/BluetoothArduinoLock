@@ -52,7 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
         checkBluetoothState();
 
-        IntentFilter filter = new IntentFilter();
+    }
+
+    private void registerBroadcastReceiver(){
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         registerReceiver(receiver, filter);
     }
 
@@ -60,13 +65,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-
             Log.i(TAG, intent.getAction());
             if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
                 Toast.makeText(MainActivity.this, "Scan started", Toast.LENGTH_SHORT).show();
 
                 //discovery starts, we can show progress dialog or perform other tasks
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                Toast.makeText(MainActivity.this, "Scan finished", Toast.LENGTH_SHORT).show();
                 //discovery finishes, dismis progress dialog
             } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                 //bluetooth device found
@@ -86,13 +91,13 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    @OnClick(R.id.getDevBtn)
-    public void getDevBtnClick() {
-        Log.d(TAG, "startDiscovery()");
-        bluetoothAdapter.startDiscovery();
-//        Intent vis = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-//        startActivityForResult(vis, VISIBLE_REQUEST_CODE);
-    }
+//    @OnClick(R.id.getDevBtn)
+//    public void getDevBtnClick() {
+//        Log.d(TAG, "startDiscovery()");
+//        bluetoothAdapter.startDiscovery();
+////        Intent vis = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+////        startActivityForResult(vis, VISIBLE_REQUEST_CODE);
+//    }
 
     @OnClick(R.id.listDevBtn)
     public void listDevBtnClick() {
@@ -104,6 +109,23 @@ public class MainActivity extends AppCompatActivity {
         for(BluetoothDevice dev: pairedDevices) list.add(dev.getName());
         final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
         pairedListView.setAdapter(adapter);
+    }
+
+    @OnCheckedChanged(R.id.scanSwitch)
+    public void scanCheckChanged(boolean isChecked){
+        if(isChecked){
+            Log.i(TAG, "startDiscovery()");
+            registerBroadcastReceiver();
+            bluetoothAdapter.startDiscovery();
+        }else{
+            Log.i(TAG, "cancelDiscovery()");
+            unregisterBroadcastReceiver();
+            bluetoothAdapter.cancelDiscovery();
+        }
+    }
+
+    private void unregisterBroadcastReceiver() {
+        unregisterReceiver(receiver);
     }
 
     @OnCheckedChanged(R.id.bluetoothSwitch)

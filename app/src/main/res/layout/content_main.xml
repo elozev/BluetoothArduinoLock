@@ -19,27 +19,15 @@
         tools:layout_editor_absoluteY="16dp" />
 
     <Button
-        android:id="@+id/getDevBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/bluetoothSwitch"
-        android:layout_marginTop="19dp"
-        android:text="@string/get_visible_devices"
-        tools:layout_editor_absoluteX="16dp"
-        tools:layout_editor_absoluteY="95dp" />
-
-    <Button
         android:id="@+id/listDevBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/getDevBtn"
-        android:layout_marginLeft="14dp"
-        android:layout_marginStart="14dp"
-        android:layout_toEndOf="@+id/getDevBtn"
-        android:layout_toRightOf="@+id/getDevBtn"
-        android:text="@string/list_devices" />
+        android:text="@string/list_devices"
+        android:layout_below="@+id/bluetoothSwitch"
+        android:layout_alignRight="@+id/bluetoothSwitch"
+        android:layout_alignEnd="@+id/bluetoothSwitch"
+        android:layout_marginRight="75dp"
+        android:layout_marginEnd="75dp" />
 
     <ListView
         android:id="@+id/pairedListView"
@@ -47,6 +35,16 @@
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/getDevBtn"
+        android:layout_below="@+id/scanSwitch"
         android:layout_marginTop="31dp" />
+
+    <Switch
+        android:id="@+id/scanSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/scan"
+        android:layout_alignBaseline="@+id/listDevBtn"
+        android:layout_alignBottom="@+id/listDevBtn"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 </RelativeLayout>

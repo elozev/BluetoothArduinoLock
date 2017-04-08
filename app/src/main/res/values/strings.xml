@@ -4,4 +4,5 @@
     <string name="bluetooth">Bluetooth</string>
     <string name="list_devices">LIST DEVICES</string>
     <string name="get_visible_devices">GET VISIBLE DEVICES</string>
+    <string name="scan">Scan</string>
 </resources>
