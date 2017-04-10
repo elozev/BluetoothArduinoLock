@@ -5,4 +5,10 @@
     <string name="list_devices">LIST DEVICES</string>
     <string name="get_visible_devices">GET VISIBLE DEVICES</string>
     <string name="scan">Scan</string>
+    <string name="title_activity_lock_controll">LockControll</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="login">Login</string>
+    <string name="input_prefil">#4286f4</string>
+    <string name="connecting">Connecting...</string>
 </resources>

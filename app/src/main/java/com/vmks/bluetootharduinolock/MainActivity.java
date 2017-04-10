@@ -10,9 +10,12 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -22,12 +25,14 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
+import butterknife.OnItemClick;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int ON_REQUEST_CODE = 3122;
     private static final int VISIBLE_REQUEST_CODE = 1311;
     private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String EXTRA_ADDRESS = "device_address";
     @BindView(R.id.bluetoothSwitch)
     Switch bluetoothSwitch;
 
@@ -104,11 +109,27 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "listDevBtnClick()", Toast.LENGTH_SHORT).show();
         pairedDevices = bluetoothAdapter.getBondedDevices();
 
-        ArrayList list = new ArrayList();
+        ArrayList<String> list = new ArrayList<>();
 
-        for(BluetoothDevice dev: pairedDevices) list.add(dev.getName());
-        final ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, list);
+        for(BluetoothDevice dev: pairedDevices) list.add(dev.getName() + " " + dev.getAddress());
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list);
         pairedListView.setAdapter(adapter);
+    }
+
+    @OnItemClick(R.id.pairedListView)
+    public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3){
+
+        String info = ((TextView) v).getText().toString();
+        String address = info.substring(info.length() - 17);
+
+        Toast.makeText(MainActivity.this, address, Toast.LENGTH_SHORT).show();
+
+
+        Intent i = new Intent(MainActivity.this, LockControll.class);
+
+        //Change the activity.
+        i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
+        startActivity(i);
     }
 
     @OnCheckedChanged(R.id.scanSwitch)
