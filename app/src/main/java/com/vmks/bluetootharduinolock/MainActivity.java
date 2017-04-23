@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(MainActivity.this, address, Toast.LENGTH_SHORT).show();
 
 
-        Intent i = new Intent(MainActivity.this, LockControll.class);
+        Intent i = new Intent(MainActivity.this, LockControl.class);
 
         //Change the activity.
         i.putExtra(EXTRA_ADDRESS, address); //this will be received at ledControl (class) Activity
