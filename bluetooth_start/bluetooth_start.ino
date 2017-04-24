@@ -3,9 +3,13 @@
 #include <AESLib.h>
 
 #define LED_PIN 13
+#define YELLOW_LED_PIN 6
+#define BUTTON_PIN 7
+
 #define TX 11
 #define RX 12
 #define PERIOD_TIME 60000
+#define PAIR_TIME 5000
 
 SoftwareSerial BT(TX, RX);
 // creates a "virtual" serial port/UART
@@ -29,6 +33,9 @@ String passwords[] = {
   "occasionalprinciplesdiscretionitasheunpleasingboisterous"
 };
 
+String devices[20];
+int devCounter = 0;
+
 void setup()
 {
 
@@ -50,6 +57,11 @@ void setup()
   lcd.begin(16, 2);
   lcd.print("Hello Android");
 
+  pinMode(YELLOW_LED_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT);
+
+//  digitalWrite(YELLOW_LED_PIN, HIGH);
+
   delay(2000);
 }
 
@@ -66,15 +78,68 @@ unsigned long lastPeriodChange = 0;
 bool isPasswordPending = false;
 String passwordPending = "";
 
+String deviceIdPending = "";
+
+unsigned long pairStartTime;
+bool isInPair = false;
+bool isLogin = false;
+
 
 void loop() {
 
+
+  debounceButton(digitalRead(BUTTON_PIN));
+
+  pairDevices();
+  
   periodChecker();
   //  lcd.print(millis());
   if (BT.available()) {
     a = (BT.read());
     inputHandler(a);
   }
+}
+
+void pairDevices(){
+  if(isInPair){
+    if((millis() - pairStartTime) >= PAIR_TIME){
+      isInPair = false;
+      digitalWrite(YELLOW_LED_PIN, LOW);
+    }
+  }
+}
+
+char ledCommand;
+
+int buttonState;             // the current reading from the input pin
+int lastButtonState = LOW;   // the previous reading from the input pin
+
+unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+unsigned long debounceDelay = 50; 
+
+void debounceButton(int reading){
+
+   if(reading != lastButtonState){
+    lastDebounceTime = millis();
+   }
+
+   if((millis() - lastDebounceTime) > debounceDelay){
+    if(reading != buttonState){
+      buttonState = reading;
+
+      if(buttonState == HIGH){
+        callPair();    
+      }
+    }
+   }
+   lastButtonState = reading;
+}
+
+void callPair(){
+     digitalWrite(YELLOW_LED_PIN, HIGH);
+     isInPair = true;
+     pairStartTime = millis();  
+     BT.println("Pairing...");
 }
 
 void periodChecker() {
@@ -94,34 +159,37 @@ void periodChecker() {
   lcd.print(millis() / 1000);
 }
 
-void passwordChecker(String pass) {
-  if (pass == passwords[period]) {
-    BT.println("Access granted");
-  } else {
-    BT.println("Access denied");
-  }
+bool passwordChecker(String pass) {
+  
+  return pass == passwords[period];
+//  if (pass == passwords[period]) {
+//    BT.println("Access granted");
+//    return true;
+//  } else {
+//    BT.println("Access denied");
+//  }
 }
 
 void inputHandler(char a) {
   Serial.println(a);
 
-  if (!isPasswordPending) {
+  if (!isPasswordPending && !isInPair && !isLogin) {
     switch (a) {
       case 'r':
         BT.println(period);
         BT.println(timeToNextPeriod);
         break;
       case 'o':
-        digitalWrite(LED_PIN, HIGH);
-        BT.println("LED on");
-        Serial.println(digitalRead(3));
-        Serial.println(a);
+//        digitalWrite(LED_PIN, HIGH);
+//        BT.println("LED on");
+//        Serial.println(digitalRead(3));
+//        Serial.println(a);
         break;
       case 'f':
-        digitalWrite(LED_PIN, LOW);
-        BT.println("LED off");
-        Serial.println(digitalRead(3));
-        Serial.println(a);
+//        digitalWrite(LED_PIN, LOW);
+//        BT.println("LED off");
+//        Serial.println(digitalRead(3));
+//        Serial.println(a);
         break;
       case 's':
         BT.println(digitalRead(LED_PIN));
@@ -133,14 +201,27 @@ void inputHandler(char a) {
           isPasswordPending = true;
           passwordPending = "";
           BT.println("Enter your password: ");
-          //            lcd.clear();
-          //            lcd.setCursor(0, 0);
-          //            lcd.println("Enter pass:");
+        } else if (prevA == 'd') {
+          if(isInPair){
+            BT.println("Enter device id:");
+          } else {
+            BT.println("Press the button!");
+          }
+        } else if (prevA == 'l') {
+          isLogin = true;
+        } else if (prevA == 'o'){
+          isPasswordPending = true;
+          passwordPending = "";
+          ledCommand = 'o';
+        } else if (prevA == 'f'){
+          isPasswordPending = true;
+          passwordPending = "";
+          ledCommand = 'f';
         }
         break;
     }
     prevA = a;
-  } else {
+  } else if (isPasswordPending) {
     if (a != '/') {
       passwordPending += a;
       //        lcd.clear();
@@ -149,9 +230,60 @@ void inputHandler(char a) {
     } else {
       isPasswordPending = false;
       BT.println(passwordPending);
-      passwordChecker(passwordPending);
+      bool check = passwordChecker(passwordPending);
+      if(check){
+        BT.println("Access granted!");
+        if(ledCommand == 'o'){
+          digitalWrite(LED_PIN, HIGH);
+        }else if (ledCommand == 'f'){
+          digitalWrite(LED_PIN, LOW);
+        }
+      } else {
+        BT.println("Access denied!");
+      }
+      
       passwordPending = "";
     }
+  } else if (isInPair){
+    if (a != '/'){
+      deviceIdPending += a;  
+    } else {
+      BT.println(deviceIdPending);
+      addToDeviceList(deviceIdPending);
+      deviceIdPending = "";
+    }
+  } else if(isLogin){
+        if(a != '/'){
+          deviceIdPending += a;
+        } else {
+          bool success = checkLogin(deviceIdPending);
+          if(success){
+            BT.println("Dev registrated!");
+          }else{
+            BT.println("Dev not registrated!");
+          }
+          deviceIdPending = "";
+        }
+  }  
+}
+
+bool checkLogin(String dev){
+  int i;
+  for (i = 0; i < 20; i++){
+    if(devices[i] == dev){
+      return true; 
+    }
+  }
+  return false;
+}
+
+void addToDeviceList(String dev){
+  if(devCounter <= 20){
+    devices[devCounter] = dev;
+    devCounter++;
+    BT.println("Device added to security list!");
+  }else{
+    BT.println("Device security list full!");
   }
 }
 
