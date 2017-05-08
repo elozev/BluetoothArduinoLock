@@ -12,16 +12,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.scottyab.aescrypt.AESCrypt;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +28,7 @@ import java.util.UUID;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 
 public class LockControl extends AppCompatActivity {
@@ -36,11 +36,14 @@ public class LockControl extends AppCompatActivity {
     @BindView(R.id.usernameTextView)
     EditText usernameEdtText;
 
+    @BindView(R.id.ledSwitch)
+    Switch lockSwitch;
+
     private static final String TAG = LockControl.class.getSimpleName();
+
     private String deviceAddress;
 
     private Command lastCommand = Command.NONE;
-
     private BluetoothSocket bluetoothSocket;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothDevice bluetoothDevice;
@@ -50,12 +53,12 @@ public class LockControl extends AppCompatActivity {
     byte[] readBuffer;
     int readBufferPosition;
     int counter;
-    volatile boolean stopWorker;
 
+    volatile boolean stopWorker;
     private boolean isBluetoothConnected;
+
     //TODO: fill the uuid
     private static final UUID bluetoothUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
     private List<String> messages;
 
     @Override
@@ -81,19 +84,31 @@ public class LockControl extends AppCompatActivity {
     public void loginClick() {
         String msg = usernameEdtText.getText().toString();
         sendMessage(msg);
-//        myLabel.setText("Data Sent");
+        lastCommand = Command.NONE;
+//        checkState();
     }
 
-    @OnClick(R.id.lockBtn)
-    public void lockBtn() {
-        sendMessage("l:" + deviceAddress + "/");
-        lastCommand = Command.LOCK;
+    @OnCheckedChanged(R.id.ledSwitch)
+    public void switchControl(boolean isChecked) {
+        if (isChecked) {
+            sendMessage("l:" + deviceAddress + "/");
+            lastCommand = Command.LOCK;
+        } else {
+            sendMessage("l:" + deviceAddress + "/");
+            lastCommand = Command.UNLOCK;
+        }
+    }//
+
+    public void checkState() {
+        sendMessage("s");
+        lastCommand = Command.STATE;
     }
 
     private void sendMessage(String msg) {
         if (bluetoothSocket != null) {
             msg += "\n";
             try {
+                outputStream.flush();
                 outputStream.write(msg.getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -129,17 +144,17 @@ public class LockControl extends AppCompatActivity {
         lastCommand = Command.REGISTRATION;
     }
 
-    private void decrypt(String message, String key) {
-//        String password = "password";
-//        String encryptedMsg = "2B22cS3UC5s35WBihLBo8w==";
-        try {
-            String messageAfterDecrypt = AESCrypt.decrypt(key, message);
-            Log.d(TAG, "Decrypted: " + messageAfterDecrypt);
-        } catch (GeneralSecurityException e) {
-            //handle error - could be due to incorrect password or tampered encryptedMsg
-            Log.d(TAG, "Decrypted: failed");
-        }
-    }
+//    private void decrypt(String message, String key) {
+////        String password = "password";
+////        String encryptedMsg = "2B22cS3UC5s35WBihLBo8w==";
+//        try {
+//            String messageAfterDecrypt = AESCrypt.decrypt(key, message);
+//            Log.d(TAG, "Decrypted: " + messageAfterDecrypt);
+//        } catch (GeneralSecurityException e) {
+//            //handle error - could be due to incorrect password or tampered encryptedMsg
+//            Log.d(TAG, "Decrypted: failed");
+//        }
+//    }
 
     private void listenForData() {
         final Handler handler = new Handler();
@@ -209,7 +224,39 @@ public class LockControl extends AppCompatActivity {
                     } catch (NumberFormatException e) {
                         Toast.makeText(this, "Try logging again", Toast.LENGTH_SHORT).show();
                     }
+
+                    lastCommand = Command.NONE;
                 break;
+            case UNLOCK:
+                String splitData2[] = data.split("\\.");
+                for (String s : splitData2) {
+                    Log.d(TAG, "Split: " + s);
+                }
+
+                if (splitData2.length > 2)
+                    try {
+                        int period = Integer.parseInt(splitData2[1]);
+                        Log.d(TAG, "Period: " + period);
+                        Log.d(TAG, "Pass: " + PasswordManager.passwords[period]);
+
+                        String pass = PasswordManager.passwords[period];
+
+                        sendMessage("f:" + pass + "/");
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Try logging again", Toast.LENGTH_SHORT).show();
+                    }
+                lastCommand = Command.NONE;
+                break;
+            case STATE:
+                Log.d(TAG, "STATE FROM DATA _________________: " + data);
+                if ("0".equals(data)) {
+                    lockSwitch.setChecked(false);
+                } else if ("1".equals(data)) {
+                    lockSwitch.setChecked(true);
+                }
+                lastCommand = Command.NONE;
+                break;
+
         }
     }
 
@@ -247,6 +294,8 @@ public class LockControl extends AppCompatActivity {
                         listenForData();
                     }
                 });
+
+                checkState();
             } catch (IOException e) {
                 dialog.dismiss();
                 e.printStackTrace();

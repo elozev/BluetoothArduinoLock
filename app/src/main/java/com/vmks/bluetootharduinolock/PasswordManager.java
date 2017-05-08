@@ -6,17 +6,17 @@ package com.vmks.bluetootharduinolock;
 
 public class PasswordManager {
 
-    public static String[] passwords = {
-            "songswordswrongbymehillsheardtimed",
-            "losehillwellupwillheoveron",
-            "wonderbedelinorfamilysecuremet",
-            "thefarattachmentdiscoveredcelebrateddecisivelysurroundedforand",
-            "aroundreallyhisuseuneasylongerhimman",
-            "ferrarsallspiritshisimagineeffectsamongstneither",
-            "uptodenotingsubjectssensiblefeelingsitindulgeddirectly",
-            "ownmarianneimprovedsociablenotout",
-            "convincedresolvingextensivagreeableinitonasremainder",
-            "occasionalprinciplesdiscretionitasheunpleasingboisterous"
+   static String passwords[] = {
+            "songswordswrongq",
+            "losehillwellupwe",
+            "wonderbedelinora",
+            "thefarattachmeff",
+            "aroundreallyhisn",
+            "ferrarsallspiria",
+            "uptodenotingsubt",
+            "ownmarianneimpra",
+            "convincedresolvm",
+            "occasionalprincu"
     };
 
 

@@ -1,14 +1,6 @@
 #include <SoftwareSerial.h>
 #include<LiquidCrystal.h>
-
-//#include <mcrypt.h>
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string.h>
-//#include <math.h>
-//#include <stdint.h>
-//#include <stdlib.h>
-
+#include<AESLib.h>
 
 #define LED_PIN 13
 #define YELLOW_LED_PIN 6
@@ -26,16 +18,16 @@ SoftwareSerial BT(TX, RX);
 // connect BT Vcc to 5V, GND to GND
 
 String passwords[] = {
-  "songswordswrongbymehillsheardtimed",
-  "losehillwellupwillheoveron",
-  "wonderbedelinorfamilysecuremet",
-  "thefarattachmentdiscoveredcelebrateddecisivelysurroundedforand",
-  "aroundreallyhisuseuneasylongerhimman",
-  "ferrarsallspiritshisimagineeffectsamongstneither",
-  "uptodenotingsubjectssensiblefeelingsitindulgeddirectly",
-  "ownmarianneimprovedsociablenotout",
-  "convincedresolvingextensivagreeableinitonasremainder",
-  "occasionalprinciplesdiscretionitasheunpleasingboisterous"
+  "songswordswrongq",
+  "losehillwellupwe",
+  "wonderbedelinora",
+  "thefarattachmeff",
+  "aroundreallyhisn",
+  "ferrarsallspiria",
+  "uptodenotingsubt",
+  "ownmarianneimpra",
+  "convincedresolvm",
+  "occasionalprincu"
 };
 
 String devices[20];
@@ -170,21 +162,22 @@ void inputHandler(char a) {
         //   sendMessageToBT(timeToNextPeriod + "");
         break;
       case 'o':
-        //        digitalWrite(LED_PIN, HIGH);
-        //        BT.println("LED on");
-        //        Serial.println(digitalRead(3));
-        //        Serial.println(a);
+                digitalWrite(LED_PIN, HIGH);
+                BT.println("LED on");
+                Serial.println(digitalRead(3));
+                Serial.println(a);
         break;
       case 'f':
-        //        digitalWrite(LED_PIN, LOW);
-        //        BT.println("LED off");
-        //        Serial.println(digitalRead(3));
-        //        Serial.println(a);
+                digitalWrite(LED_PIN, LOW);
+                BT.println("LED off");
+                Serial.println(digitalRead(3));
+                Serial.println(a);
         break;
       case 's':
         BT.println(digitalRead(LED_PIN));
         break;
       case 'p':
+        pass();
         break;
       case ':':
         if (prevA == 'p') {
@@ -222,6 +215,7 @@ void inputHandler(char a) {
       //BT.println(passwordPending);
       sendMessageToBT(passwordPending + "");
       bool check = passwordChecker(passwordPending);
+      BT.println(check);
       if (check) {
         sendMessageToBT("Access granted!");
         //        BT.println("Access granted!");
@@ -304,27 +298,27 @@ void addToDeviceList(String dev) {
   }
 }
 
-//void pass() {
-//  uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-//  //String key2 = "hahaha";
-//
-//  char data[] = "0123";
-//  aes256_enc_single(key, data);
-//  Serial.print("encrypted:");
-//  Serial.print(data);
-//
-//  BT.print("encrypted:");
-//  BT.println(data);
-//
-//  char data2[] = "eRdYzLYQrbN98q9FE1x1pZcJzpGAVGdtDo5RlLqDh0k=";
-//  aes256_dec_single(key, data);
-//
-//  Serial.print("decrypted:");
-//  Serial.println(data2);
-//
-//  BT.print("decrypted:");
-//  BT.println(data);
-//}
+void pass() {
+  uint8_t key[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+  //String key2 = "hahaha";
+
+  char data[] = "0123456789123456";
+  aes128_enc_single(key, data);
+  Serial.print("encrypted:");
+  Serial.print(data);
+
+  BT.print("encrypted:");
+  BT.println(data);
+
+  char data2[] = "eRdYzLYQrbN98q9FE1x1pZcJzpGAVGdtDo5RlLqDh0k=";
+  aes128_dec_single(key, data);
+
+  Serial.print("decrypted:");
+  Serial.println(data2);
+
+  BT.print("decrypted:");
+  BT.println(data);
+}
 
 void sendMessageToBT(String message) {
   BT.println(message);
