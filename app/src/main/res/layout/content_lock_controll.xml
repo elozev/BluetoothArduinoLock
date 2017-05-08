@@ -51,4 +51,12 @@
         android:layout_alignEnd="@+id/passwordEditText"
         android:layout_alignRight="@+id/passwordEditText"
         android:text="Register" />
+
+    <Button
+        android:id="@+id/lockBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="Lock/unlock"/>
 </RelativeLayout>
